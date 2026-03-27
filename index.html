@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Bolão Copa 2026</title>
+
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #009c3b, #002776);
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #000;
+}
+
+h1 {
+    text-align: center;
+    color: #ffdf00;
+}
+
+h2 {
+    border-bottom: 2px solid #ffdf00;
+    padding-bottom: 5px;
+}
+
+input, select {
+    padding: 6px;
+    margin: 4px;
+    border-radius: 6px;
+    border: none;
+}
+
+.jogo {
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: #ffdf00;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.msg {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+}
+
+.erro { background: red; }
+.sucesso { background: green; }
+
+.topo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.info-jogo {
+    font-size: 13px;
+    color: #ffdf00;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.linha-placar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.time {
+    font-weight: bold;
+}
+
+.placar-input {
+    width: 70px;
+}
+.acoes {
+    margin-top: 20px;
+}
+
+.msg {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    display: none;
+    text-align: center;
+    font-weight: bold;
+}
+.acoes {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.acoes button {
+    width: auto;
+    min-width: 260px;
+    margin-top: 0;
+}
+
+.msg {
+    margin-top: 0;
+    padding: 10px 14px;
+    border-radius: 6px;
+    display: none;
+    font-weight: bold;
+    flex: 1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Bolão Copa do Mundo 2026 🇧🇷</h1>
+
+<p><b>Administrador:</b> José Roberto</p>
+
+<div class="topo">
+    <input type="text" id="nome" placeholder="Nome completo">
+    <input type="text" id="apelido" placeholder="Apelido">
+    <input type="text" id="telefone" placeholder="Telefone">
+    <input type="date" id="data">
+</div>
+
+<div id="jogos"></div>
+
+<div class="acoes">
+    <button onclick="salvar()">ENVIAR PALPITES</button>
+    <div id="mensagem" class="msg"></div>
+</div>
+
+<script>
+
+// ⚽ LISTA COMPLETA DOS 72 JOGOS DA FASE DE GRUPOS
+const jogos = [
+    // 1ª rodada
+    { rodada: 1, grupo: "Grupo A", data: "Quinta-feira, 11 de junho de 2026", t1: "México", t2: "África do Sul", cidade: "Cidade do México, no México", horario: "13h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo A", data: "Quinta-feira, 11 de junho de 2026", t1: "República da Coreia", t2: "Dinamarca/República Tcheca", cidade: "Guadalajara", horario: "20h00 no horário local (23h00 em Brasília / 1h00 de 12 de junho em Praia / 3h00 de 12 de junho em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo B", data: "Sexta-feira, 12 de junho de 2026", t1: "Canadá", t2: "Itália/Bósnia e Herzegovina", cidade: "Toronto, no Canadá", horario: "15h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo D", data: "Sexta-feira, 12 de junho de 2026", t1: "Estados Unidos", t2: "Paraguai", cidade: "Los Angeles, nos EUA", horario: "18h00 no horário local (22h00 em Brasília / 0h00 de 13 de junho em Praia / 2h00 de 13 de junho em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo B", data: "Sábado, 13 de junho de 2026", t1: "Catar", t2: "Suíça", cidade: "Santa Clara (região da Baía de San Francisco), nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 20h00 em Praia / 22h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo C", data: "Sábado, 13 de junho de 2026", t1: "Brasil", t2: "Marrocos", cidade: "Nova York/Nova Jersey, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo C", data: "Sábado, 13 de junho de 2026", t1: "Haiti", t2: "Escócia", cidade: "Boston, nos EUA", horario: "21h00 no horário local (22h00 em Brasília / 0h00 de 14 de junho em Praia / 2h00 de 14 de junho em Lisboa)" },
+    { rodada: 1, grupo: "Grupo D", data: "Sábado, 13 de junho de 2026", t1: "Austrália", t2: "Kosovo/Turquia", cidade: "Vancouver, no Canadá", horario: "21h00 no horário local (1h00 de 14 de junho em Brasília / 3h00 em Praia / 5h00 em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo E", data: "Domingo, 14 de junho de 2026", t1: "Alemanha", t2: "Curaçau", cidade: "Houston, nos EUA", horario: "12h00 no horário local (14h00 em Brasília / 16h00 em Praia / 18h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo E", data: "Domingo, 14 de junho de 2026", t1: "Costa do Marfim", t2: "Equador", cidade: "Filadélfia, nos EUA", horario: "19h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 15 de junho em Lisboa)" },
+    { rodada: 1, grupo: "Grupo F", data: "Domingo, 14 de junho de 2026", t1: "Holanda", t2: "Japão", cidade: "Dallas, nos EUA", horario: "15h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo F", data: "Domingo, 14 de junho de 2026", t1: "Polônia/Suécia", t2: "Tunísia", cidade: "Monterrey, no México", horario: "20h00 no horário local (22h00 em Brasília / 0h00 de 15 de junho em Praia / 2h00 de 15 de junho em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo H", data: "Segunda-feira, 15 de junho de 2026", t1: "Espanha", t2: "Cabo Verde", cidade: "Atlanta, nos EUA", horario: "12h00 no horário local (13h00 em Brasília / 15h00 em Praia / 17h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo H", data: "Segunda-feira, 15 de junho de 2026", t1: "Arábia Saudita", t2: "Uruguai", cidade: "Miami, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo G", data: "Segunda-feira, 15 de junho de 2026", t1: "Bélgica", t2: "Egito", cidade: "Seattle, nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo G", data: "Segunda-feira, 15 de junho de 2026", t1: "Irã", t2: "Nova Zelândia", cidade: "Los Angeles, nos EUA", horario: "18h00 no horário local (22h00 em Brasília / 0h00 de 16 de junho em Praia / 2h00 de 16 de junho em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo J", data: "Terça-feira, 16 de junho de 2026", t1: "Áustria", t2: "Jordânia", cidade: "Santa Clara (região da Baía de San Francisco), nos EUA", horario: "21h00 no horário local (1h00 de 17 de junho em Brasília / 3h00 de 17 de junho em Praia / 5h00 de 17 de junho em Lisboa)" },
+    { rodada: 1, grupo: "Grupo I", data: "Terça-feira, 16 de junho de 2026", t1: "França", t2: "Senegal", cidade: "Nova York/Nova Jersey, nos EUA", horario: "15h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo I", data: "Terça-feira, 16 de junho de 2026", t1: "Bolívia/Iraque", t2: "Noruega", cidade: "Boston, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo J", data: "Terça-feira, 16 de junho de 2026", t1: "Argentina", t2: "Argélia", cidade: "Kansas City, nos EUA", horario: "20h00 no horário local (22h00 em Brasília / 0h00 de 17 de junho em Praia / 2h00 de 17 de junho em Lisboa)" },
+
+    { rodada: 1, grupo: "Grupo K", data: "Quarta-feira, 17 de junho de 2026", t1: "Portugal", t2: "Jamaica/RD do Congo", cidade: "Houston, nos EUA", horario: "12h00 no horário local (14h00 em Brasília / 16h00 em Praia / 18h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo L", data: "Quarta-feira, 17 de junho de 2026", t1: "Inglaterra", t2: "Croácia", cidade: "Dallas, nos EUA", horario: "15h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 1, grupo: "Grupo L", data: "Quarta-feira, 17 de junho de 2026", t1: "Gana", t2: "Panamá", cidade: "Toronto, no Canadá", horario: "19h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 18 de junho em Lisboa)" },
+    { rodada: 1, grupo: "Grupo K", data: "Quarta-feira, 17 de junho de 2026", t1: "Uzbequistão", t2: "Colômbia", cidade: "Cidade do México, no México", horario: "20h00 no horário local (21h00 em Brasília / 23h00 em Praia / 1h00 de 18 de junho em Lisboa)" },
+
+    // 2ª rodada
+    { rodada: 2, grupo: "Grupo A", data: "Quinta-feira, 18 de junho de 2026", t1: "Dinamarca/República Tcheca", t2: "África do Sul", cidade: "Atlanta, nos EUA", horario: "12h00 no horário local (13h00 em Brasília / 15h00 em Praia / 17h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo B", data: "Quinta-feira, 18 de junho de 2026", t1: "Suíça", t2: "Bósnia e Herzegovina/Itália", cidade: "Los Angeles, nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo B", data: "Quinta-feira, 18 de junho de 2026", t1: "Canadá", t2: "Catar", cidade: "Vancouver, no Canadá", horario: "15h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo A", data: "Quinta-feira, 18 de junho de 2026", t1: "México", t2: "República da Coreia", cidade: "Guadalajara, no México", horario: "19h00 no horário local (22h00 em Brasília / 0h00 de 19 de junho em Praia / 2h00 de 19 de junho em Lisboa)" },
+
+    { rodada: 2, grupo: "Grupo D", data: "Sexta-feira, 19 de junho de 2026", t1: "Kosovo/Turquia", t2: "Paraguai", cidade: "Santa Clara (região da Baía de San Francisco), nos EUA", horario: "21h00 no horário local (1h00 em Brasília / 3h00 em Praia / 5h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo D", data: "Sexta-feira, 19 de junho de 2026", t1: "Estados Unidos", t2: "Austrália", cidade: "Seattle, nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo C", data: "Sexta-feira, 19 de junho de 2026", t1: "Escócia", t2: "Marrocos", cidade: "Boston, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo C", data: "Sexta-feira, 19 de junho de 2026", t1: "Brasil", t2: "Haiti", cidade: "Filadélfia, nos EUA", horario: "21h00 no horário local (22h00 em Brasília / 0h00 de 20 de junho em Praia / 2h00 de 20 de junho em Lisboa)" },
+
+    { rodada: 2, grupo: "Grupo F", data: "Sábado, 20 de junho de 2026", t1: "Tunísia", t2: "Japão", cidade: "Monterrey, no México", horario: "20h00 no horário local (23h00 em Brasília / 1h00 de 21 de junho em Praia / 3h00 de 21 de junho em Lisboa)" },
+    { rodada: 2, grupo: "Grupo F", data: "Sábado, 20 de junho de 2026", t1: "Holanda", t2: "Polônia/Suécia", cidade: "Houston, nos EUA", horario: "12h00 no horário local (14h00 em Brasília / 16h00 em Praia / 18h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo E", data: "Sábado, 20 de junho de 2026", t1: "Alemanha", t2: "Costa do Marfim", cidade: "Toronto, no Canadá", horario: "16h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo E", data: "Sábado, 20 de junho de 2026", t1: "Equador", t2: "Curaçau", cidade: "Kansas City, nos EUA", horario: "19h00 no horário local (21h00 em Brasília / 23h00 em Praia / 1h00 de 21 de junho em Lisboa)" },
+
+    { rodada: 2, grupo: "Grupo H", data: "Domingo, 21 de junho de 2026", t1: "Espanha", t2: "Arábia Saudita", cidade: "Atlanta, nos EUA", horario: "12h00 no horário local (13h00 em Brasília / 15h00 em Praia / 17h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo G", data: "Domingo, 21 de junho de 2026", t1: "Bélgica", t2: "Irã", cidade: "Los Angeles, nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo H", data: "Domingo, 21 de junho de 2026", t1: "Uruguai", t2: "Cabo Verde", cidade: "Miami, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo G", data: "Domingo, 21 de junho de 2026", t1: "Nova Zelândia", t2: "Egito", cidade: "Vancouver, no Canadá", horario: "18h00 no horário local (22h00 em Brasília / 0h00 de 22 de junho em Praia / 2h00 de 22 de junho em Lisboa)" },
+
+    { rodada: 2, grupo: "Grupo J", data: "Segunda-feira, 22 de junho de 2026", t1: "Argentina", t2: "Áustria", cidade: "Dallas, nos EUA", horario: "12h00 no horário local (14h00 em Brasília / 16h00 em Praia / 18h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo I", data: "Segunda-feira, 22 de junho de 2026", t1: "França", t2: "Bolívia/Iraque", cidade: "Filadélfia, nos EUA", horario: "17h00 no horário local (18h00 em Brasília / 20h00 em Praia / 22h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo I", data: "Segunda-feira, 22 de junho de 2026", t1: "Noruega", t2: "Senegal", cidade: "Nova York/Nova Jersey, nos EUA", horario: "20h00 no horário local (21h00 em Brasília / 23h00 em Praia / 1h00 de 23 de junho em Lisboa)" },
+    { rodada: 2, grupo: "Grupo J", data: "Segunda-feira, 22 de junho de 2026", t1: "Jordânia", t2: "Argélia", cidade: "Santa Clara (região da Baía de San Francisco), nos EUA", horario: "20h00 no horário local (0h00 de 23 de junho em Brasília / 2h00 de 23 de junho em Praia / 4h00 de 23 de junho em Lisboa)" },
+
+    { rodada: 2, grupo: "Grupo K", data: "Terça-feira, 23 de junho de 2026", t1: "Portugal", t2: "Uzbequistão", cidade: "Houston, nos EUA", horario: "12h00 no horário local (14h00 em Brasília / 16h00 em Praia / 18h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo L", data: "Terça-feira, 23 de junho de 2026", t1: "Inglaterra", t2: "Gana", cidade: "Boston, nos EUA", horario: "16h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 2, grupo: "Grupo L", data: "Terça-feira, 23 de junho de 2026", t1: "Panamá", t2: "Croácia", cidade: "Toronto, no Canadá", horario: "19h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 24 de junho em Lisboa)" },
+    { rodada: 2, grupo: "Grupo K", data: "Terça-feira, 23 de junho de 2026", t1: "Colômbia", t2: "Jamaica/RD do Congo", cidade: "Guadalajara, no México", horario: "20h00 no horário local (23h00 em Brasília / 1h00 de 24 de junho em Praia / 3h00 de 24 de junho em Lisboa)" },
+
+    // 3ª rodada
+    { rodada: 3, grupo: "Grupo B", data: "Quarta-feira, 24 de junho de 2026", t1: "Suíça", t2: "Canadá", cidade: "Vancouver, no Canadá", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo B", data: "Quarta-feira, 24 de junho de 2026", t1: "Bósnia e Herzegovina/Itália", t2: "Catar", cidade: "Seattle, nos EUA", horario: "12h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo C", data: "Quarta-feira, 24 de junho de 2026", t1: "Escócia", t2: "Brasil", cidade: "Miami, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo C", data: "Quarta-feira, 24 de junho de 2026", t1: "Marrocos", t2: "Haiti", cidade: "Atlanta, nos EUA", horario: "18h00 no horário local (19h00 em Brasília / 21h00 em Praia / 23h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo A", data: "Quarta-feira, 24 de junho de 2026", t1: "Dinamarca/República Tcheca", t2: "México", cidade: "Cidade do México, no México", horario: "19h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 25 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo A", data: "Quarta-feira, 24 de junho de 2026", t1: "África do Sul", t2: "República da Coreia", cidade: "Monterrey, no México", horario: "19h00 no horário local (22h00 em Brasília / 0h00 de 25 de junho em Praia / 2h00 de 25 de junho em Lisboa)" },
+
+    { rodada: 3, grupo: "Grupo E", data: "Quinta-feira, 25 de junho de 2026", t1: "Equador", t2: "Alemanha", cidade: "Nova York/Nova Jersey, nos EUA", horario: "16h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo E", data: "Quinta-feira, 25 de junho de 2026", t1: "Curaçau", t2: "Costa do Marfim", cidade: "Filadélfia, nos EUA", horario: "16h00 no horário local (17h00 em Brasília / 19h00 em Praia / 21h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo F", data: "Quinta-feira, 25 de junho de 2026", t1: "Japão", t2: "Polônia/Suécia", cidade: "Dallas, nos EUA", horario: "18h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 26 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo F", data: "Quinta-feira, 25 de junho de 2026", t1: "Tunísia", t2: "Holanda", cidade: "Kansas City, nos EUA", horario: "18h00 no horário local (20h00 em Brasília / 22h00 em Praia / 0h00 de 26 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo D", data: "Quinta-feira, 25 de junho de 2026", t1: "Kosovo/Turquia", t2: "Estados Unidos", cidade: "Los Angeles, nos EUA", horario: "19h00 no horário local (23h00 em Brasília / 1h00 de 26 de junho em Praia / 3h00 de 26 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo D", data: "Quinta-feira, 25 de junho de 2026", t1: "Paraguai", t2: "Austrália", cidade: "Santa Clara (região da Baía de San Francisco), nos EUA", horario: "19h00 no horário local (23h00 em Brasília / 1h00 de 26 de junho em Praia / 3h00 de 26 de junho em Lisboa)" },
+
+    { rodada: 3, grupo: "Grupo I", data: "Sexta-feira, 26 de junho de 2026", t1: "Noruega", t2: "França", cidade: "Boston, nos EUA", horario: "15h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo I", data: "Sexta-feira, 26 de junho de 2026", t1: "Senegal", t2: "Bolívia/Iraque", cidade: "Toronto, no Canadá", horario: "15h00 no horário local (16h00 em Brasília / 18h00 em Praia / 20h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo H", data: "Sexta-feira, 26 de junho de 2026", t1: "Cabo Verde", t2: "Arábia Saudita", cidade: "Houston, nos EUA", horario: "19h00 no horário local (21h00 em Brasília / 23h00 em Praia / 1h00 de 27 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo H", data: "Sexta-feira, 26 de junho de 2026", t1: "Uruguai", t2: "Espanha", cidade: "Guadalajara, no México", horario: "18h00 no horário local (21h00 em Brasília / 23h00 em Praia / 1h00 de 27 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo G", data: "Sexta-feira, 26 de junho de 2026", t1: "Egito", t2: "Irã", cidade: "Seattle, nos EUA", horario: "20h00 no horário local (0h00 de 27 de junho em Brasília / 2h00 de 27 de junho em Praia / 4h00 de 27 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo G", data: "Sexta-feira, 26 de junho de 2026", t1: "Nova Zelândia", t2: "Bélgica", cidade: "Vancouver, no Canadá", horario: "20h00 no horário local (0h00 de 27 de junho em Brasília / 2h00 de 27 de junho em Praia / 4h00 de 27 de junho em Lisboa)" },
+
+    { rodada: 3, grupo: "Grupo L", data: "Sábado, 27 de junho de 2026", t1: "Panamá", t2: "Inglaterra", cidade: "Nova York/Nova Jersey, nos EUA", horario: "17h00 no horário local (18h00 em Brasília / 20h00 em Praia / 22h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo L", data: "Sábado, 27 de junho de 2026", t1: "Croácia", t2: "Gana", cidade: "Filadélfia, nos EUA", horario: "17h00 no horário local (18h00 em Brasília / 20h00 em Praia / 22h00 em Lisboa)" },
+    { rodada: 3, grupo: "Grupo K", data: "Sábado, 27 de junho de 2026", t1: "Colômbia", t2: "Portugal", cidade: "Miami, nos EUA", horario: "19h30 no horário local (20h30 em Brasília / 22h30 em Praia / 0h30 de 28 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo K", data: "Sábado, 27 de junho de 2026", t1: "Jamaica/RD do Congo", t2: "Uzbequistão", cidade: "Atlanta, nos EUA", horario: "19h30 no horário local (20h30 em Brasília / 22h30 em Praia / 0h30 de 28 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo J", data: "Sábado, 27 de junho de 2026", t1: "Argélia", t2: "Áustria", cidade: "Kansas City, nos EUA", horario: "21h00 no horário local (23h00 em Brasília / 1h00 de 28 de junho em Praia / 3h00 de 28 de junho em Lisboa)" },
+    { rodada: 3, grupo: "Grupo J", data: "Sábado, 27 de junho de 2026", t1: "Jordânia", t2: "Argentina", cidade: "Dallas, nos EUA", horario: "21h00 no horário local (23h00 de 27 de junho em Brasília / 0h00 de 28 de junho em Praia / 2h00 de 28 de junho em Lisboa)" }
+];
+
+const container = document.getElementById("jogos");
+
+let rodadaAtual = 0;
+
+jogos.forEach((jogo, i) => {
+    if (jogo.rodada !== rodadaAtual) {
+        rodadaAtual = jogo.rodada;
+        container.innerHTML += `<h2>${rodadaAtual}ª Rodada</h2>`;
+    }
+
+    container.innerHTML += `
+    <div class="jogo">
+        <div class="info-jogo">
+            <div><b>${jogo.grupo}</b></div>
+            <div>${jogo.data}</div>
+            <div>${jogo.cidade}</div>
+            <div>${jogo.horario}</div>
+        </div>
+
+        <div class="linha-placar">
+            <span class="time">${jogo.t1}</span>
+            <input type="number" class="placar-input" id="g1_${i}" min="0" placeholder="0">
+            <span>x</span>
+            <input type="number" class="placar-input" id="g2_${i}" min="0" placeholder="0">
+            <span class="time">${jogo.t2}</span>
+        </div>
+    </div>
+    `;
+});
+
+function msg(texto, tipo){
+    const m = document.getElementById("mensagem");
+    m.style.display = "block";
+    m.className = "msg " + tipo;
+    m.innerText = texto;
+}
+
+function salvar(){
+    const nome = document.getElementById("nome").value.trim();
+    const telefone = document.getElementById("telefone").value.trim();
+    const apelido = document.getElementById("apelido").value.trim();
+    const data = document.getElementById("data").value;
+
+    if(!nome || !telefone || !apelido || !data){
+        msg("Preencha todos os campos!", "erro");
+        return;
+    }
+
+    let palpites = [];
+
+    for(let i = 0; i < jogos.length; i++){
+        let g1 = document.getElementById(`g1_${i}`).value;
+        let g2 = document.getElementById(`g2_${i}`).value;
+
+        if(g1 === "" || g2 === ""){
+            msg("Preencha todos os jogos!", "erro");
+            return;
+        }
+
+        palpites.push({
+            jogo: i + 1,
+            rodada: jogos[i].rodada,
+            grupo: jogos[i].grupo,
+            data_jogo: jogos[i].data,
+            cidade: jogos[i].cidade,
+            horario: jogos[i].horario,
+            t1: jogos[i].t1,
+            t2: jogos[i].t2,
+            g1,
+            g2
+        });
+    }
+
+    const dados = {
+        nome,
+        apelido,
+        telefone,
+        data,
+        palpites
+    };
+
+    emailjs.init("02aiblnVh9jdGpFfi");
+
+    emailjs.send("service_3wpi22h", "template_ttbfgni", {
+        mensagem: JSON.stringify(dados, null, 2),
+        nome: nome
+    })
+    .then(() => {
+        msg("Palpites enviados com sucesso!", "sucesso");
+    })
+    .catch(() => {
+        msg("Erro ao enviar!", "erro");
+    });
+}
+</script>
+
+</body>
+</html>
