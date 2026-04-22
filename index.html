@@ -95,6 +95,7 @@ button {
 .placar-input {
     width: 70px;
 }
+
 .acoes {
     margin-top: 20px;
 }
@@ -107,6 +108,7 @@ button {
     text-align: center;
     font-weight: bold;
 }
+
 .acoes {
     display: flex;
     align-items: center;
@@ -269,9 +271,9 @@ jogos.forEach((jogo, i) => {
 
         <div class="linha-placar">
             <span class="time">${jogo.t1}</span>
-            <input type="number" class="placar-input" id="g1_${i}" min="0" placeholder="0">
+            <input type="number" class="placar-input" id="g1_${i}" min="0">
             <span>x</span>
-            <input type="number" class="placar-input" id="g2_${i}" min="0" placeholder="0">
+            <input type="number" class="placar-input" id="g2_${i}" min="0">
             <span class="time">${jogo.t2}</span>
         </div>
     </div>
